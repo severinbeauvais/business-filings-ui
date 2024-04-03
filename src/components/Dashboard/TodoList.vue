@@ -110,7 +110,7 @@
                   v-model="enableCheckbox[index]"
                   class="todo-list-checkbox"
                   label="All information about the Office Addresses and Current Directors is correct."
-                  :disabled="!item.enabled || isCoaPending"
+                  :disabled="!item.enabled || isCoaPending || !isAllowed(AllowableActions.ANNUAL_REPORT)"
                   @click.stop
                 />
               </div>
@@ -316,6 +316,17 @@
                     EnumUtilities.isTypeRestoration(item) || EnumUtilities.isTypeContinuationOut(item))"
                 >
                   <!-- no action button in this case -->
+                </template>
+
+                <!-- allow Delete only (draft filing) -->
+                <template v-else-if="item.allowDeleteOnly">
+                  <v-btn
+                    class="btn-draft-delete"
+                    color="primary"
+                    @click.native.stop="confirmDeleteDraft(item)"
+                  >
+                    <span>Delete draft</span>
+                  </v-btn>
                 </template>
 
                 <!-- draft filing -->
@@ -686,6 +697,7 @@ export default class TodoList extends Mixins(AllowableActionsMixin, DateMixin, E
   @Action(useRootStore) setNextARDate!: (x: string) => void
 
   // for template
+  readonly AllowableActions = AllowableActions
   readonly EnumUtilities = EnumUtilities
   readonly FilingStatus = FilingStatus
 
@@ -1089,9 +1101,7 @@ export default class TodoList extends Mixins(AllowableActionsMixin, DateMixin, E
 
     if (dissolution && business && header) {
       // don't allow resuming a draft if not in good standing
-      if (this.isStatusDraft(header) && !this.isGoodStanding) {
-        task.enabled = false
-      }
+      const allowDeleteOnly = (this.isStatusDraft(header) && !this.isGoodStanding)
 
       const corpFullDescription = GetCorpFullDescription(business.legalType)
 
@@ -1099,6 +1109,8 @@ export default class TodoList extends Mixins(AllowableActionsMixin, DateMixin, E
       const payErrorObj = paymentStatusCode && await PayServices.getPayErrorObj(this.getPayApiUrl, paymentStatusCode)
 
       const item: TodoItemIF = {
+        allowDeleteOnly,
+
         name: FilingTypes.DISSOLUTION,
         filingId: header.filingId,
         legalType: corpFullDescription,
@@ -1133,10 +1145,7 @@ export default class TodoList extends Mixins(AllowableActionsMixin, DateMixin, E
       )
 
       // don't allow resuming a draft if not in good standing
-      // for entity type change alterations only
-      if (this.isStatusDraft(header) && !this.isGoodStanding && isAlteringToBen) {
-        task.enabled = false
-      }
+      const allowDeleteOnly = (this.isStatusDraft(header) && !this.isGoodStanding)
 
       const corpFullDescription = GetCorpFullDescription(business.legalType)
 
@@ -1152,6 +1161,8 @@ export default class TodoList extends Mixins(AllowableActionsMixin, DateMixin, E
       const payErrorObj = paymentStatusCode && await PayServices.getPayErrorObj(this.getPayApiUrl, paymentStatusCode)
 
       const item: TodoItemIF = {
+        allowDeleteOnly,
+
         name: FilingTypes.ALTERATION,
         filingId: header.filingId,
         legalType: corpFullDescription,
@@ -1654,9 +1665,7 @@ export default class TodoList extends Mixins(AllowableActionsMixin, DateMixin, E
 
     if (header && specialResolution) {
       // don't allow resuming a draft if not in good standing
-      if (this.isStatusDraft(header) && !this.isGoodStanding) {
-        task.enabled = false
-      }
+      const allowDeleteOnly = (this.isStatusDraft(header) && !this.isGoodStanding)
 
       const corpFullDescription = GetCorpFullDescription(business.legalType)
 
@@ -1664,6 +1673,7 @@ export default class TodoList extends Mixins(AllowableActionsMixin, DateMixin, E
       const payErrorObj = paymentStatusCode && await PayServices.getPayErrorObj(this.getPayApiUrl, paymentStatusCode)
 
       const item: TodoItemIF = {
+        allowDeleteOnly,
         name: FilingTypes.SPECIAL_RESOLUTION,
         filingId: header.filingId,
         legalType: corpFullDescription,
@@ -1690,11 +1700,6 @@ export default class TodoList extends Mixins(AllowableActionsMixin, DateMixin, E
     const restoration = filing.restoration
 
     if (header && restoration) {
-      // don't allow resuming a draft if not in good standing
-      if (this.isStatusDraft(header) && !this.isGoodStanding) {
-        task.enabled = false
-      }
-
       const corpFullDescription = GetCorpFullDescription(business.legalType)
 
       const title = EnumUtilities.filingTypeToName(FilingTypes.RESTORATION, null, restoration.type)

@@ -396,15 +396,15 @@ export default class EntityMenu extends Mixins(AllowableActionsMixin) {
    * Otherwise, navigates to the Edit UI to view or change company information.
    */
   promptChangeCompanyInfo (): void {
-    const base = `${this.getEditUrl}${this.getIdentifier}`
+    const editUrl = `${this.getEditUrl}${this.getIdentifier}`
 
     if (this.isCoop) {
-      navigate(`${base}/special-resolution`)
+      navigate(`${editUrl}/special-resolution`)
     } else if (!this.isGoodStanding) {
       this.emitNotInGoodStanding(NigsMessage.CHANGE_COMPANY_INFO)
     } else {
       const route = this.isFirm ? '/change' : '/alteration'
-      navigate(`${base}${route}`)
+      navigate(`${editUrl}${route}`)
     }
   }
 
