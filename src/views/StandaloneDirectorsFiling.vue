@@ -117,7 +117,6 @@
                   </p>
 
                   <v-alert
-                    v-if="!isBaseCompany"
                     type="info"
                     outlined
                     icon="mdi-information"
@@ -144,7 +143,6 @@
                     @directorsFreeChange="onDirectorsFreeChange($event)"
                     @directorFormValid="directorFormValid=$event"
                     @directorEditAction="directorEditInProgress=$event"
-                    @earliestDateToSet="earliestDateToSet=$event"
                     @complianceDialogMsg="complianceDialogMsg=$event"
                   />
                 </section>
@@ -432,6 +430,9 @@ export default class StandaloneDirectorsFiling extends Mixins(CommonMixin, DateM
 
   @Getter(useConfigurationStore) getAuthWebUrl!: string
   @Getter(useConfigurationStore) getBusinessApiUrl!: string
+  @Getter(useBusinessStore) getFoundingDate!: Date
+  @Getter(useBusinessStore) getLastAnnualReportDate!: string
+  @Getter(useBusinessStore) getLastDirectorChangeDate!: string
   @Getter(useBusinessStore) getLegalName!: string
   @Getter(useConfigurationStore) getPayApiUrl!: string
   @Getter(useRootStore) getFolioNumber!: string
@@ -446,7 +447,6 @@ export default class StandaloneDirectorsFiling extends Mixins(CommonMixin, DateM
   saveErrorReason: SaveErrorReasons = null
   paymentErrorDialog = false
   staffPaymentDialog = false
-  earliestDateToSet = 'your last filing' // default
   inFilingReview = false
   isCertified = false
   certifiedBy = ''
@@ -522,6 +522,41 @@ export default class StandaloneDirectorsFiling extends Mixins(CommonMixin, DateM
   /** The Free Director Change fee code based on entity type. */
   get freeFeeCode (): FilingCodes {
     return this.isBaseCompany ? FilingCodes.FREE_DIRECTOR_CHANGE_BC : FilingCodes.FREE_DIRECTOR_CHANGE_OT
+  }
+
+  /**
+   * The earliest date that can be set, in "MMM DD, YYYY" format.
+   * See also CodDate.vue::minDate.
+   */
+  get earliestDateToSet (): string {
+    if (this.isBaseCompany) {
+      if (GetFeatureFlag('enable-backdated-cod')) {
+        // Corp director changes can be backdated all the way back to the founding date
+        // -- even before other CODs.
+        return this.dateToPacificDate(this.getFoundingDate, true, false)
+      }
+
+      // Corp director changes can go back to the last COD filing in filing history, or
+      // the founding date if there are no previous CODs.
+      if (this.getLastDirectorChangeDate) {
+        const date = this.yyyyMmDdToDate(this.getLastDirectorChangeDate)
+        return this.dateToPacificDate(date, true, false)
+      }
+
+      return this.dateToPacificDate(this.getFoundingDate, true, false)
+    }
+
+    if (this.getLastDirectorChangeDate || this.getLastAnnualReportDate) {
+      // For Coops, use the latest of the following dates:
+      // - the last COD filing in filing history
+      // - the last AR filing in filing history
+      const latest = this.latestYyyyMmDd(this.getLastDirectorChangeDate, this.getLastAnnualReportDate)
+      const date = this.yyyyMmDdToDate(latest)
+      return this.dateToPacificDate(date, true, false)
+    }
+
+    // If the entity has no filing history then use the founding date.
+    return this.dateToPacificDate(this.getFoundingDate, true, false)
   }
 
   /** Called when component is created. */

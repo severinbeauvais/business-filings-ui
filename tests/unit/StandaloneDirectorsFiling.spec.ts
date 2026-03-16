@@ -1831,3 +1831,67 @@ describe('Standalone Directors Filing - payment required error', () => {
     wrapper.destroy()
   })
 })
+
+describe('Standalone Directors Filing - date computation', () => {
+  beforeAll(() => {
+    rootStore.setAuthorizedActions(BusinessRegistryStaffActions)
+    rootStore.setCurrentDate('2026-03-16')
+  })
+
+  it('shows correct earliest date to set for BEN', () => {
+    // init business
+    businessStore.setIdentifier('BC1234567')
+    businessStore.setLegalType(CorpTypeCd.BENEFIT_COMPANY)
+    businessStore.setFoundingDate('2020-06-01T12:00:00') // Pacific Daylight Time
+
+    const $route = { query: { filingId: 0 } } // new filing id
+    const wrapper = shallowMount(StandaloneDirectorsFiling, { mocks: { $route } })
+
+    // set date
+    businessStore.setLastDirectorChangeDate('2024-12-31') // Pacific Standard Time
+
+    // verify Earliest Date To Set is last director change date
+    expect(wrapper.vm.earliestDateToSet).toBe('December 31, 2024')
+
+    // set date
+    businessStore.setLastDirectorChangeDate('') // no director change since incorporation
+
+    // verify Earliest Date To Set is founding date
+    expect(wrapper.vm.earliestDateToSet).toBe('June 1, 2020')
+
+    wrapper.destroy()
+  })
+
+  it('shows correct earliest date to set for COOP', () => {
+    // init business
+    businessStore.setIdentifier('CP0001191')
+    businessStore.setLegalType(CorpTypeCd.COOP)
+    businessStore.setFoundingDate('2018-03-01T12:00:00')
+
+    const $route = { query: { filingId: 0 } } // new filing id
+    const wrapper = shallowMount(StandaloneDirectorsFiling, { mocks: { $route } })
+
+    // set dates
+    businessStore.setLastDirectorChangeDate('2024-12-31') // Pacific Standard Time
+    businessStore.setLastAnnualReportDate('2025-12-31') // Pacific Standard Time
+
+    // verify Earliest Date To Set is last annual report date
+    expect(wrapper.vm.earliestDateToSet).toBe('December 31, 2025')
+
+    // set dates
+    businessStore.setLastDirectorChangeDate('2024-12-31') // Pacific Standard Time
+    businessStore.setLastAnnualReportDate('') // no annual report since incorporation
+
+    // verify Earliest Date To Set is last director change date
+    expect(wrapper.vm.earliestDateToSet).toBe('December 31, 2024')
+
+    // set dates
+    businessStore.setLastDirectorChangeDate('') // no director change since incorporation
+    businessStore.setLastAnnualReportDate('') // no annual report since incorporation
+
+    // verify Earliest Date To Set is founding date
+    expect(wrapper.vm.earliestDateToSet).toBe('March 1, 2018')
+
+    wrapper.destroy()
+  })
+})

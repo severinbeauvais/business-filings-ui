@@ -98,7 +98,10 @@ export default class CodDate extends Mixins(DateMixin) {
     return this.getCurrentDate
   }
 
-  /** The minimum date that can be entered. */
+  /**
+   * The minimum date that can be entered, in YYYY-MM-DD format.
+   * See also StandaloneDirectorsFiling.vue::earliestDateToSet.
+   */
   get minDate (): string {
     let date: string = null
 

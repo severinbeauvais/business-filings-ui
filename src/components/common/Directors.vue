@@ -560,10 +560,7 @@ export default class Directors extends Mixins(CommonMixin, DateMixin, DirectorMi
   @Getter(useBusinessStore) isEntityCoop!: boolean
   @Getter(useBusinessStore) isEntityFirm!: boolean
   @Getter(useRootStore) getCurrentDate!: string
-  @Getter(useBusinessStore) getFoundingDate!: Date
   // @Getter(useBusinessStore) getIdentifier!: string
-  @Getter(useBusinessStore) getLastAnnualReportDate!: string
-  @Getter(useBusinessStore) getLastDirectorChangeDate!: string
   // @Getter(useBusinessStore) isBaseCompany!: boolean
   @Getter(useConfigurationStore) getBusinessApiUrl!: string
 
@@ -720,26 +717,6 @@ export default class Directors extends Mixins(CommonMixin, DateMixin, DirectorMi
       !this.legalNameConfirmed &&
       this.showErrors
     )
-  }
-
-  /**
-   * The latest of the following dates:
-   * - the last COD filing in filing history
-   * - the last AR filing in filing history
-   * If the entity has no filing history then the founding date will be used.
-   */
-  get earliestDateToSet (): string {
-    let date: string = null
-
-    if (this.getLastDirectorChangeDate || this.getLastAnnualReportDate) {
-      date = this.latestYyyyMmDd(this.getLastDirectorChangeDate, this.getLastAnnualReportDate)
-    } else {
-      date = this.dateToYyyyMmDd(this.getFoundingDate)
-    }
-
-    // when earliest date is calculated, inform parent component
-    this.emitEarliestDateToSet(date)
-    return date
   }
 
   /**
@@ -1271,11 +1248,6 @@ export default class Directors extends Mixins(CommonMixin, DateMixin, DirectorMi
     // update the appointment/cessation dates for applicable directors
     this.updateChangedDirectorDates(newDate, oldDate)
   }
-
-  /** Emits an event containing the earliest director change date. */
-  @Emit('earliestDateToSet')
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  emitEarliestDateToSet (val: string): void {}
 
   /** Emits an event containing this component's paid change state. */
   @Emit('directorsPaidChange')
