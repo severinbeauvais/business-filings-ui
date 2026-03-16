@@ -8,36 +8,30 @@ ignore: true
 ---
 
 ## About
-TBD
+This UI implements a number of filings. See "views" folder for details.
 
-## Project setup
+This UI is built using Vue2 and Typescript. It uses Vite, Pinia and Vuetify.
+
+## Development
+
+### Install dependencies
 ```
 npm install
 ```
 
-### Compiles and hot-reloads for development
+### Compile (with hot-reload) for development
 ```
 npm run serve
 ```
 
-### Compiles and minifies for production
+### Compile and minify for production
 ```
 npm run build
 ```
 
-### Run your tests
-```
-npm run test
-```
-
-### Lints and fixes files
+### Run the linter
 ```
 npm run lint
-```
-
-### Run your end-to-end tests
-```
-npm run test:e2e
 ```
 
 ### Run your unit tests
@@ -45,18 +39,14 @@ npm run test:e2e
 npm run test:unit
 ```
 
-### Run unit tests from Chrome devtools for debugging/ step-through
-```
-npm run test:debug
-```
+### Notes
+1. Make sure you have a local `.env` file. Sample contents can be found in `.env.example`. Ask a team member if you need help with unpopulated values.
+2. Run the command to build and serve the UI.
+3. Navigate to `http://localhost:8080/` in your browser, adding any necessary query parameters to load the desired filing.
 
-### Local Development
-1. make sure you have the `.env` file, required contents can be found in `.env.production`
-2. run docker
+### Special consideration
 
-## Deployment (OpenShift)
-
-TBD
+This UI uses components from the **sbc-common-components** library, which is built using a different version of Vue and has different dependencies. As such, the `package.json` file has an "overrides" and "peerDependencies" section to ensure compatibility, and the `vite.config.js` file has specific plugin, alias, deps and optimizedDeps configuration. Do not change any of this unless you know what you are doing and have tested the changes thoroughly.
 
 ### Customize configuration
 See [Configuration Reference](https://cli.vuejs.org/config/).
@@ -75,7 +65,7 @@ Make Suggestions/Issues [here!](https://github.com/bcgov/bcrs-entities-create-ui
 Issues are [markdown supported](https://guides.github.com/features/mastering-markdown/).
 
 ## License
-    Copyright 2020 Province of British Columbia
+    Copyright 2026 Province of British Columbia
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
