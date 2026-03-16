@@ -525,7 +525,7 @@ export default class StandaloneDirectorsFiling extends Mixins(CommonMixin, DateM
   }
 
   /**
-   * The earliest date that can be set, in "MMM DD, YYYY" format.
+   * The earliest date that can be set, in long format (eg, "January 1, 2020").
    * See also CodDate.vue::minDate.
    */
   get earliestDateToSet (): string {

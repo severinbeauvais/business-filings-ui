@@ -19,6 +19,7 @@ import { BusinessConfigCp } from '@/resources/CP'
 import { CorpTypeCd } from '@bcrs-shared-components/corp-type-module'
 import { FilingCodes } from '@bcrs-shared-components/enums'
 import * as utils from '@/utils'
+import * as FeatureFlags from '@/utils/feature-flags'
 import { BusinessRegistryStaffActions, PublicUserActions } from './test-data/authorizedActions'
 
 // suppress various warnings:
@@ -36,6 +37,13 @@ setActivePinia(createPinia())
 const businessStore = useBusinessStore()
 const configurationStore = useConfigurationStore()
 const rootStore = useRootStore()
+
+// mock the entire module
+// it's the only way to override any exported function
+vi.mock('@/utils/feature-flags', () => {
+  // we just care about this one function
+  return { GetFeatureFlag: vi.fn() }
+})
 
 const sampleDirectors = [
   {
@@ -1838,7 +1846,10 @@ describe('Standalone Directors Filing - date computation', () => {
     rootStore.setCurrentDate('2026-03-16')
   })
 
-  it('shows correct earliest date to set for BEN', () => {
+  it('shows correct earliest date to set for BEN with FF disabled', () => {
+    // return the value we want for the test
+    vi.spyOn(FeatureFlags, 'GetFeatureFlag').mockReturnValue(false)
+
     // init business
     businessStore.setIdentifier('BC1234567')
     businessStore.setLegalType(CorpTypeCd.BENEFIT_COMPANY)
@@ -1852,6 +1863,33 @@ describe('Standalone Directors Filing - date computation', () => {
 
     // verify Earliest Date To Set is last director change date
     expect(wrapper.vm.earliestDateToSet).toBe('December 31, 2024')
+
+    // set date
+    businessStore.setLastDirectorChangeDate('') // no director change since incorporation
+
+    // verify Earliest Date To Set is founding date
+    expect(wrapper.vm.earliestDateToSet).toBe('June 1, 2020')
+
+    wrapper.destroy()
+  })
+
+  it('shows correct earliest date to set for BEN with FF enabled', () => {
+    // return the value we want for the test
+    vi.spyOn(FeatureFlags, 'GetFeatureFlag').mockReturnValue(true)
+
+    // init business
+    businessStore.setIdentifier('BC1234567')
+    businessStore.setLegalType(CorpTypeCd.BENEFIT_COMPANY)
+    businessStore.setFoundingDate('2020-06-01T12:00:00') // Pacific Daylight Time
+
+    const $route = { query: { filingId: 0 } } // new filing id
+    const wrapper = shallowMount(StandaloneDirectorsFiling, { mocks: { $route } })
+
+    // set date
+    businessStore.setLastDirectorChangeDate('2024-12-31') // Pacific Standard Time
+
+    // verify Earliest Date To Set is founding date
+    expect(wrapper.vm.earliestDateToSet).toBe('June 1, 2020')
 
     // set date
     businessStore.setLastDirectorChangeDate('') // no director change since incorporation
