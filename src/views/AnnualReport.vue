@@ -1261,10 +1261,6 @@ export default class AnnualReport extends Mixins(CommonMixin, DateMixin, FilingM
     return (!!this.agmDate && this.compareYyyyMmDd(this.agmDate, earliestAllowedDate, '>='))
   }
 
-  hasAction (director, action): boolean {
-    return (director.actions.indexOf(action) >= 0)
-  }
-
   /** Handles Exit event from Payment Error dialog. */
   onPaymentErrorDialogExit (): void {
     if (IsAuthorized(AuthorizedActions.STAFF_PAYMENT)) {

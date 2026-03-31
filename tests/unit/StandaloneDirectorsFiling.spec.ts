@@ -2016,10 +2016,10 @@ describe('Standalone Directors Filing - future-ceased directors', () => {
     vm = wrapper.vm
 
     // mock hasPendingTasks()
-    BusinessServices.hasPendingTasks = vi.fn().mockResolvedValue(false)
+    vi.spyOn(BusinessServices, 'hasPendingTasks').mockResolvedValue(false)
 
     // mock createFiling()
-    BusinessServices.createFiling = vi.fn()
+    vi.spyOn(BusinessServices, 'createFiling').mockResolvedValue(undefined as any)
 
     // set up in-memory director data
     await wrapper.setData({

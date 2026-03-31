@@ -987,13 +987,9 @@ export default class StandaloneDirectorsFiling extends Mixins(CommonMixin, DateM
    * Use this for final submission only (not draft saving).
    */
   fixDirectors (directors: DirectorIF[]): DirectorIF[] {
-    function isCeased (director: DirectorIF): boolean {
-      return director.actions?.includes(Actions.CEASED) || false
-    }
-
     // directors with a cease date but no cease action are future-ceased
     // return directors with no cease date or with a cease action
-    return directors.filter(director => !director.cessationDate || isCeased(director))
+    return directors.filter(director => !director.cessationDate || this.hasAction(director, Actions.CEASED))
   }
 
   /**
