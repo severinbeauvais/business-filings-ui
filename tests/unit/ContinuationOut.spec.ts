@@ -75,6 +75,23 @@ describe('Continuation Out view', () => {
     wrapper.destroy()
   })
 
+  it('doesn\'t set an initial business name', async () => {
+    const $route = { query: { filingId: '0' } }
+
+    // create local Vue and mock router
+    const localVue = createLocalVue()
+    localVue.use(VueRouter)
+    const $router = mockRouter.mock()
+
+    const wrapper = shallowMount(ContinuationOut, { mocks: { $route, $router } })
+    wrapper.vm.$data.dataLoaded = true
+    await Vue.nextTick()
+
+    expect(wrapper.vm.$data.initialBusinessName).toBe('')
+
+    wrapper.destroy()
+  })
+
   it('sets filing data properly', async () => {
     const $route = { query: { filingId: '0' } }
 

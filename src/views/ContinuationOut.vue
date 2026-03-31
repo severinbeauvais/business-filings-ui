@@ -471,7 +471,6 @@ export default class ContinuationOut extends Mixins(CommonMixin, DateMixin, Fili
       this.loadingMessage = 'Resuming Your Continuation Out'
     } else {
       this.loadingMessage = 'Preparing Your Continuation Out'
-      this.initialBusinessName = this.getLegalName
     }
 
     // fetch draft (which may overwrite some properties)
