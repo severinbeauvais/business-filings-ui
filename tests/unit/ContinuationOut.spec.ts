@@ -26,8 +26,6 @@ Vue.config.silent = true
 
 Vue.use(Vuetify)
 
-const localVue = createLocalVue()
-localVue.use(VueRouter)
 setActivePinia(createPinia())
 const businessStore = useBusinessStore()
 const configurationStore = useConfigurationStore()
@@ -52,9 +50,7 @@ describe('Continuation Out view', () => {
   it('mounts the sub-components properly', async () => {
     const $route = { query: { filingId: '0' } }
 
-    // create local Vue and mock router
-    const localVue = createLocalVue()
-    localVue.use(VueRouter)
+    // mock router
     const $router = mockRouter.mock()
 
     const wrapper = shallowMount(ContinuationOut, { mocks: { $route, $router } })
@@ -79,8 +75,6 @@ describe('Continuation Out view', () => {
     const $route = { query: { filingId: '0' } }
 
     // create local Vue and mock router
-    const localVue = createLocalVue()
-    localVue.use(VueRouter)
     const $router = mockRouter.mock()
 
     const wrapper = shallowMount(ContinuationOut, { mocks: { $route, $router } })
@@ -95,9 +89,7 @@ describe('Continuation Out view', () => {
   it('sets filing data properly', async () => {
     const $route = { query: { filingId: '0' } }
 
-    // create local Vue and mock router
-    const localVue = createLocalVue()
-    localVue.use(VueRouter)
+    // mock router
     const $router = mockRouter.mock()
 
     const wrapper = shallowMount(ContinuationOut, { mocks: { $route, $router } })
@@ -120,9 +112,7 @@ describe('Continuation Out view', () => {
     // mock $route
     const $route = { query: { filingId: '0' } }
 
-    // create local Vue and mock router
-    const localVue = createLocalVue()
-    localVue.use(VueRouter)
+    // mock router
     const $router = mockRouter.mock()
 
     const wrapper = shallowMount(ContinuationOut, { mocks: { $route, $router } })
