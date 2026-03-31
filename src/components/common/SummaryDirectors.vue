@@ -263,7 +263,8 @@ export default class SummaryDirectors extends Mixins(CommonMixin, DateMixin) {
   @Watch('directors', { deep: true, immediate: true })
   onDirectorsChanged (): void {
     // NOTE: CEASED action only exists if director was ceased in this filing.
-    // This means future-ceased directors will appear in current directors list.
+    // This means future-ceased directors will appear in current directors list
+    // (which makes sense because, as of this filing, they are still active).
     this.directorSummary = this.directors.filter(dir => !this.isCeased(dir))
     this.directorsCeased = this.directors.filter(dir => this.isCeased(dir))
   }
@@ -302,6 +303,8 @@ export default class SummaryDirectors extends Mixins(CommonMixin, DateMixin) {
    * @returns True if director is future-ceased.
    */
   isFutureCeased (director: DirectorIF): boolean {
+    // no need to check if not ceased because this method is only used in summary list,
+    // which contains only unceased directors
     return !!director.cessationDate
   }
   /**

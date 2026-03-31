@@ -441,7 +441,7 @@ export default class StandaloneDirectorsFiling extends Mixins(CommonMixin, DateM
 
   // variables
   authErrorDialog = false
-  updatedDirectors = []
+  updatedDirectors: DirectorIF[] = []
   fetchErrorDialog = false
   resumeErrorDialog = false
   saveErrorReason: SaveErrorReasons = null
@@ -954,7 +954,9 @@ export default class StandaloneDirectorsFiling extends Mixins(CommonMixin, DateM
     if (this.hasFilingCode(this.feeCode) || this.hasFilingCode(this.freeFeeCode)) {
       changeOfDirectors = {
         [FilingTypes.CHANGE_OF_DIRECTORS]: {
-          directors: this.updatedDirectors
+          // if draft, save directors as they are
+          // otherwise, remove any future ceased directors
+          directors: isDraft ? this.updatedDirectors : this.fixDirectors(this.updatedDirectors)
         }
       }
     }
@@ -978,6 +980,20 @@ export default class StandaloneDirectorsFiling extends Mixins(CommonMixin, DateM
       this.saveWarnings = error?.response?.data?.warnings || []
       throw error
     }
+  }
+
+  /**
+   * Returns a list of directors with future-ceased directors removed (as API would reject this).
+   * Use this for final submission only (not draft saving).
+   */
+  fixDirectors (directors: DirectorIF[]): DirectorIF[] {
+    function isCeased (director: DirectorIF): boolean {
+      return director.actions?.includes(Actions.CEASED) || false
+    }
+
+    // directors with a cease date but no cease action are future-ceased
+    // return directors with no cease date or with a cease action
+    return directors.filter(director => !director.cessationDate || isCeased(director))
   }
 
   /**

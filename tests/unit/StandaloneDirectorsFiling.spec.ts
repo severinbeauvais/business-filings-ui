@@ -21,6 +21,7 @@ import { FilingCodes } from '@bcrs-shared-components/enums'
 import * as utils from '@/utils'
 import * as FeatureFlags from '@/utils/feature-flags'
 import { BusinessRegistryStaffActions, PublicUserActions } from './test-data/authorizedActions'
+import { BusinessServices } from '@/services'
 
 // suppress various warnings:
 // - "Unknown custom element <affix>" warnings
@@ -1931,5 +1932,135 @@ describe('Standalone Directors Filing - date computation', () => {
     expect(wrapper.vm.earliestDateToSet).toBe('March 1, 2018')
 
     wrapper.destroy()
+  })
+})
+
+describe('Standalone Directors Filing - future-ceased directors', () => {
+  let wrapper: Wrapper<Vue>
+  let vm: any
+
+  const UNCHANGED_DIRECTOR = {
+    actions: [],
+    appointmentDate: '2026-01-01',
+    cessationDate: null,
+    deliveryAddress: {
+      addressCity: 'City',
+      addressCountry: 'CA',
+      addressRegion: 'BC',
+      postalCode: 'V8V 8V8',
+      streetAddress: 'Street'
+    },
+    officer: {
+      firstName: 'Unchanged',
+      lastName: 'Lastname'
+    }
+  }
+
+  const FUTURE_CEASED_DIRECTOR = {
+    actions: [],
+    appointmentDate: '2026-01-01',
+    cessationDate: '2026-04-01',
+    deliveryAddress: {
+      addressCity: 'City',
+      addressCountry: 'CA',
+      addressRegion: 'BC',
+      postalCode: 'V8V 8V8',
+      streetAddress: 'Street'
+    },
+    officer: {
+      firstName: 'Future-Ceased',
+      lastName: 'Lastname'
+    }
+  }
+
+  const CEASED_DIRECTOR = {
+    actions: ['ceased'],
+    appointmentDate: '2026-01-01',
+    cessationDate: '2019-03-30',
+    deliveryAddress: {
+      addressCity: 'City',
+      addressCountry: 'CA',
+      addressRegion: 'BC',
+      postalCode: 'V8V 8V8',
+      streetAddress: 'Street'
+    },
+    officer: {
+      firstName: 'Ceased',
+      lastName: 'Lastname'
+    }
+  }
+
+  beforeAll(() => {
+    // set configurations
+    configurationStore.setConfiguration({
+      'VUE_APP_BUSINESS_API_URL': 'https://business-api.url/',
+      'VUE_APP_BUSINESS_API_VERSION_2': 'v2'
+    })
+
+    // init store
+    businessStore.setIdentifier('BC1234567')
+    businessStore.setLegalName('Legal Name - BC1234567')
+    businessStore.setLegalType(CorpTypeCd.BENEFIT_COMPANY)
+    rootStore.setAuthorizedActions(PublicUserActions)
+    rootStore.setCurrentDate('2026-03-30')
+  })
+
+  beforeEach(async () => {
+    // create local Vue and mock router
+    const localVue = createLocalVue()
+    localVue.use(VueRouter)
+    const router = mockRouter.mock()
+    router.push({ name: 'standalone-directors', query: { filingId: '0' } }) // new filing id
+
+    wrapper = shallowMount(StandaloneDirectorsFiling, { localVue, router })
+    vm = wrapper.vm
+
+    // mock hasPendingTasks()
+    BusinessServices.hasPendingTasks = vi.fn().mockResolvedValue(false)
+
+    // mock createFiling()
+    BusinessServices.createFiling = vi.fn()
+
+    // set up in-memory director data
+    await wrapper.setData({
+      updatedDirectors: [UNCHANGED_DIRECTOR, FUTURE_CEASED_DIRECTOR, CEASED_DIRECTOR]
+    })
+
+    // make sure form is validated
+    await wrapper.setData({
+      codDateValid: true,
+      directorFormValid: true,
+      certifyFormValid: true,
+      folioNumberValid: true
+    })
+
+    // add paid change code
+    vm.onDirectorsPaidChange(true)
+  })
+
+  afterEach(() => {
+    vi.restoreAllMocks()
+    wrapper.destroy()
+  })
+
+  it('Includes complete list of directors in draft data', async () => {
+    // trigger "save draft" action
+    await vm.onClickSave()
+
+    // verify filing body -- should include all directors
+    expect(BusinessServices.createFiling).toHaveBeenCalledWith('BC1234567', expect.objectContaining(
+      { changeOfDirectors: { directors: [UNCHANGED_DIRECTOR, FUTURE_CEASED_DIRECTOR, CEASED_DIRECTOR] } }
+    ), true)
+  })
+
+  it('Includes non-future-ceased directors in submitted data', async () => {
+    // trigger "submit filing" action
+    await vm.onClickFilePay()
+
+    // verify filing body - should include unchanged and ceased director but not future-ceased director
+
+    expect(BusinessServices.createFiling).toHaveBeenCalledWith('BC1234567', expect.objectContaining(
+      { changeOfDirectors: { directors: [UNCHANGED_DIRECTOR, CEASED_DIRECTOR] } }
+    ), false)
   })
 })
